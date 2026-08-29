@@ -1,0 +1,307 @@
+{
+  "merchants": {
+    "swiggy": {
+      "name": "Swiggy",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Food Delivery & Dining",
+      "sub_sub_bucket": "Swiggy Delivery",
+      "match_patterns": [
+        "swiggy",
+        "pyu*swiggy",
+        "www swiggy"
+      ]
+    },
+    "zomato": {
+      "name": "Zomato",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Food Delivery & Dining",
+      "sub_sub_bucket": "Zomato Delivery",
+      "match_patterns": [
+        "zomato"
+      ]
+    },
+    "mcdonalds": {
+      "name": "McDonald's",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Food Delivery & Dining",
+      "sub_sub_bucket": "Fast Food / McDonald's",
+      "match_patterns": [
+        "mc donal",
+        "mcdonald"
+      ]
+    },
+    "zepto": {
+      "name": "Zepto",
+      "type": "Expense",
+      "bucket": "Living & Daily Essentials",
+      "sub_bucket": "Groceries & Quick Commerce",
+      "sub_sub_bucket": "Zepto 10-min",
+      "match_patterns": [
+        "zepto",
+        "zeptonow",
+        "zeptomarketplace"
+      ]
+    },
+    "blinkit": {
+      "name": "Blinkit",
+      "type": "Expense",
+      "bucket": "Living & Daily Essentials",
+      "sub_bucket": "Groceries & Quick Commerce",
+      "sub_sub_bucket": "Blinkit Quick",
+      "match_patterns": [
+        "blinkit",
+        "blink commerce"
+      ]
+    },
+    "akshayakalpa": {
+      "name": "Akshayakalpa Organic",
+      "type": "Expense",
+      "bucket": "Living & Daily Essentials",
+      "sub_bucket": "Dairy & Organic",
+      "sub_sub_bucket": "Akshayakalpa Milk & Grocery",
+      "match_patterns": [
+        "akshayakalpa"
+      ]
+    },
+    "amazon": {
+      "name": "Amazon",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "E-Commerce Shopping",
+      "sub_sub_bucket": "Amazon India",
+      "match_patterns": [
+        "amazon",
+        "apay",
+        "a.in"
+      ]
+    },
+    "flipkart": {
+      "name": "Flipkart",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "E-Commerce Shopping",
+      "sub_sub_bucket": "Flipkart Online",
+      "match_patterns": [
+        "flipkart",
+        "flpkrt"
+      ]
+    },
+    "firstcry": {
+      "name": "FirstCry",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Baby & Kids",
+      "sub_sub_bucket": "FirstCry Kids",
+      "match_patterns": [
+        "firstcry"
+      ]
+    },
+    "apollo": {
+      "name": "Apollo Pharmacy",
+      "type": "Expense",
+      "bucket": "Healthcare & Wellness",
+      "sub_bucket": "Pharmacy & Medicine",
+      "sub_sub_bucket": "Apollo Online / Store",
+      "match_patterns": [
+        "apollo",
+        "aplphr"
+      ]
+    },
+    "sowbhagya": {
+      "name": "Sowbhagya Medicals",
+      "type": "Expense",
+      "bucket": "Healthcare & Wellness",
+      "sub_bucket": "Pharmacy & Medicine",
+      "sub_sub_bucket": "Local Pharmacy",
+      "match_patterns": [
+        "sowbhagya medical"
+      ]
+    },
+    "healing_hands": {
+      "name": "Healing Hands Physio",
+      "type": "Expense",
+      "bucket": "Healthcare & Wellness",
+      "sub_bucket": "Consultations & Physio",
+      "sub_sub_bucket": "Physiotherapy Clinic",
+      "match_patterns": [
+        "healing hands",
+        "physio",
+        "kivihealth"
+      ]
+    },
+    "avvnl": {
+      "name": "AVVNL Electricity",
+      "type": "Expense",
+      "bucket": "Bills & Utilities",
+      "sub_bucket": "Electricity",
+      "sub_sub_bucket": "AVVNL Power Bill",
+      "match_patterns": [
+        "avvnl"
+      ]
+    },
+    "airtel": {
+      "name": "Airtel",
+      "type": "Expense",
+      "bucket": "Bills & Utilities",
+      "sub_bucket": "Telecom & Broadband",
+      "sub_sub_bucket": "Airtel Black / Postpaid",
+      "match_patterns": [
+        "airtel",
+        "airbil"
+      ]
+    },
+    "jio": {
+      "name": "Jio",
+      "type": "Expense",
+      "bucket": "Bills & Utilities",
+      "sub_bucket": "Telecom & Broadband",
+      "sub_sub_bucket": "Jio Fiber / Prepaid",
+      "match_patterns": [
+        "jio",
+        "jioinf"
+      ]
+    },
+    "bookmyshow": {
+      "name": "BookMyShow / Cinema",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Entertainment & Cinema",
+      "sub_sub_bucket": "Movies & Events",
+      "match_patterns": [
+        "bookmyshow",
+        "bmshow",
+        "inox",
+        "pvr"
+      ]
+    },
+    "cred": {
+      "name": "CRED Bill Payment",
+      "type": "Credit Card Bill Payment",
+      "bucket": "Financial & Debt Obligations",
+      "sub_bucket": "Credit Card Settlement",
+      "sub_sub_bucket": "CRED Card Bill Pay",
+      "match_patterns": [
+        "cred.club",
+        "credclub",
+        "cred cash"
+      ]
+    },
+    "groww_sip": {
+      "name": "Groww Mutual Funds",
+      "type": "Investment",
+      "bucket": "Investments & Wealth",
+      "sub_bucket": "Mutual Funds & SIP",
+      "sub_sub_bucket": "Groww Equity SIP",
+      "match_patterns": [
+        "groww.stocksip",
+        "groww"
+      ]
+    },
+    "hdfc_mf": {
+      "name": "HDFC Mutual Fund",
+      "type": "Investment",
+      "bucket": "Investments & Wealth",
+      "sub_bucket": "Mutual Funds & SIP",
+      "sub_sub_bucket": "HDFC MF AutoPay",
+      "match_patterns": [
+        "mfautopay"
+      ]
+    },
+    "motilal_mf": {
+      "name": "Motilal Oswal MF",
+      "type": "Investment",
+      "bucket": "Investments & Wealth",
+      "sub_bucket": "Mutual Funds & SIP",
+      "sub_sub_bucket": "Motilal Midcap SIP",
+      "match_patterns": [
+        "moamcl",
+        "momf midcap"
+      ]
+    },
+    "salary_wm": {
+      "name": "WM Global Tech (Salary)",
+      "type": "Income",
+      "bucket": "Income & Inflows",
+      "sub_bucket": "Salary",
+      "sub_sub_bucket": "Primary Employer Salary",
+      "match_patterns": [
+        "wm global technology"
+      ]
+    },
+    "dividends": {
+      "name": "Stock Dividend",
+      "type": "Income",
+      "bucket": "Income & Inflows",
+      "sub_bucket": "Dividends",
+      "sub_sub_bucket": "ACH Equity Dividend",
+      "match_patterns": [
+        "achcr/"
+      ]
+    },
+    "atm_cash": {
+      "name": "ATM Cash Withdrawal",
+      "type": "Cash Withdrawal",
+      "bucket": "Financial & Debt Obligations",
+      "sub_bucket": "Cash & Liquidity",
+      "sub_sub_bucket": "Debit Card ATM Cash",
+      "match_patterns": [
+        "atm cash",
+        "withdrawn via kotak debit card"
+      ]
+    },
+    "p2p_manisha": {
+      "name": "Manisha Sharma",
+      "type": "Transfer",
+      "bucket": "Family & Personal Transfers",
+      "sub_bucket": "Family Support",
+      "sub_sub_bucket": "Manisha Transfer",
+      "match_patterns": [
+        "manishashrm21"
+      ]
+    },
+    "p2p_puja": {
+      "name": "Puja Sharma",
+      "type": "Transfer",
+      "bucket": "Family & Personal Transfers",
+      "sub_bucket": "Family Support",
+      "sub_sub_bucket": "Puja Transfer",
+      "match_patterns": [
+        "pujasharmaghy97"
+      ]
+    },
+    "p2p_saravanamoorthy": {
+      "name": "Saravanamoorthy S",
+      "type": "Expense",
+      "bucket": "Living & Daily Essentials",
+      "sub_bucket": "Local Vendor & Provision",
+      "sub_sub_bucket": "Local Store Spend",
+      "match_patterns": [
+        "saravanamoorthy"
+      ]
+    },
+    "p2p_sujatha": {
+      "name": "Sujatha",
+      "type": "Expense",
+      "bucket": "Living & Daily Essentials",
+      "sub_bucket": "Local Vendor & Provision",
+      "sub_sub_bucket": "Domestic / Vendor Spend",
+      "match_patterns": [
+        "sujatha"
+      ]
+    },
+    "sujatha": {
+      "name": "Sujatha",
+      "type": "Expense",
+      "bucket": "Living & Daily Essentials",
+      "sub_bucket": "Local Vendor & Provision",
+      "sub_sub_bucket": "smoks",
+      "match_patterns": [
+        "sujatha",
+        "sujatha"
+      ]
+    }
+  }
+}
