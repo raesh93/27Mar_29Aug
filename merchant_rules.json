@@ -1,5 +1,28 @@
 {
   "merchants": {
+    "amazon_pay_cc_bill": {
+      "name": "Amazon Pay CC Bill Payment",
+      "type": "Credit Card Bill Payment",
+      "bucket": "Financial & Debt Obligations",
+      "sub_bucket": "Credit Card Settlement",
+      "sub_sub_bucket": "Amazon Pay CC Bill Pay",
+      "match_patterns": [
+        "amazonpayccbillpayment"
+      ]
+    },
+    "credit_card_bill": {
+      "name": "Credit Card Bill Payment",
+      "type": "Credit Card Bill Payment",
+      "bucket": "Financial & Debt Obligations",
+      "sub_bucket": "Credit Card Settlement",
+      "sub_sub_bucket": "Credit Card Bill Pay",
+      "match_patterns": [
+        "credit card bill payment",
+        "credit card bill",
+        "bharat bill payment system",
+        "bill payment system"
+      ]
+    },
     "swiggy": {
       "name": "Swiggy",
       "type": "Expense",
@@ -221,6 +244,20 @@
         "momf midcap"
       ]
     },
+    "nps_protean": {
+      "name": "National Pension System",
+      "type": "Investment",
+      "bucket": "Investments & Wealth",
+      "sub_bucket": "Retirement & Pension (NPS)",
+      "sub_sub_bucket": "NPS Tier 1 Contribution",
+      "match_patterns": [
+        "pran",
+        "protean",
+        "ptnnps",
+        "npscra",
+        "national pension system"
+      ]
+    },
     "salary_wm": {
       "name": "WM Global Tech (Salary)",
       "type": "Income",
@@ -301,6 +338,138 @@
       "match_patterns": [
         "sujatha",
         "sujatha"
+      ]
+    },
+    "planter": {
+      "name": "PLANTER",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Plants",
+      "sub_sub_bucket": "Plants",
+      "match_patterns": [
+        "planter",
+        "planter"
+      ]
+    },
+    "nithyashree_tea_st": {
+      "name": "NITHYASHREE TEA ST",
+      "type": "Expense",
+      "bucket": "Living & Daily Essentials",
+      "sub_bucket": "Office Tea",
+      "sub_sub_bucket": "Tea",
+      "match_patterns": [
+        "nithyashree tea st",
+        "nithyashree tea st"
+      ]
+    },
+    "trc_jp": {
+      "name": "TRC JP",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Coffee",
+      "sub_sub_bucket": "Coffee",
+      "match_patterns": [
+        "trc jp",
+        "trc jp"
+      ]
+    },
+    "tps*orix_co": {
+      "name": "TPS*ORIX CO",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Rentals",
+      "sub_sub_bucket": "Car Rental",
+      "match_patterns": [
+        "tps*orix co",
+        "tps*orix co"
+      ]
+    },
+    "urban": {
+      "name": "URBAN",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "UrbanCompany",
+      "sub_sub_bucket": "Drill",
+      "match_patterns": [
+        "urban",
+        "urban"
+      ]
+    },
+    "suryansh": {
+      "name": "SURYANSH",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Tea",
+      "sub_sub_bucket": "tea",
+      "match_patterns": [
+        "suryansh",
+        "suryansh"
+      ]
+    },
+    "sri_sathya_sai_kee": {
+      "name": "SRI SATHYA SAI KEE",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Petrol",
+      "sub_sub_bucket": "Petrol",
+      "match_patterns": [
+        "sri sathya sai kee",
+        "sri sathya sai kee"
+      ]
+    },
+    "sowbhagy": {
+      "name": "SOWBHAGY",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Office Tea",
+      "sub_sub_bucket": "Tea",
+      "match_patterns": [
+        "sowbhagy",
+        "sowbhagy"
+      ]
+    },
+    "sarathy": {
+      "name": "SARATHY",
+      "type": "Expense",
+      "bucket": "Living & Daily Essentials",
+      "sub_bucket": "Utensils",
+      "sub_sub_bucket": "Utensils",
+      "match_patterns": [
+        "sarathy",
+        "sarathy"
+      ]
+    },
+    "santosh_filling_st": {
+      "name": "SANTOSH FILLING ST",
+      "type": "Expense",
+      "bucket": "Living & Daily Essentials",
+      "sub_bucket": "Petrol",
+      "sub_sub_bucket": "Petrol",
+      "match_patterns": [
+        "santosh filling st",
+        "santosh filling st"
+      ]
+    },
+    "pitshirt": {
+      "name": "PITSHIRT",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Clothes",
+      "sub_sub_bucket": "Papa Tshirt",
+      "match_patterns": [
+        "pitshirt",
+        "pitshirt"
+      ]
+    },
+    "adani_digital_labs_pri": {
+      "name": "ADANI DIGITAL LABS PRI",
+      "type": "Expense",
+      "bucket": "Discretionary & Lifestyle",
+      "sub_bucket": "Airport",
+      "sub_sub_bucket": "Lounge",
+      "match_patterns": [
+        "adani digital labs pri",
+        "adani digital labs pri"
       ]
     }
   }

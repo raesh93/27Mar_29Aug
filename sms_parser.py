@@ -93,6 +93,25 @@ def match_hierarchy(raw_merchant, content, txn_type, rules):
             "Refund / Reversal"
         )
         
+    if txn_type == "Credit Card Bill Payment":
+        return (
+            clean_raw if clean_raw != "Unknown" else "Credit Card Bill Payment",
+            "Credit Card Bill Payment",
+            "Financial & Debt Obligations",
+            "Credit Card Settlement",
+            "Credit Card Bill Pay"
+        )
+        
+    if txn_type in ["Investment", "Investment Inflow"]:
+        is_nps = "nps" in m_lower or "pran" in c_lower or "protean" in c_lower
+        return (
+            clean_raw if clean_raw != "Unknown" else ("National Pension System" if is_nps else "Investment"),
+            txn_type,
+            "Investments & Wealth",
+            "Retirement & Pension (NPS)" if is_nps else "Mutual Funds & SIP",
+            "NPS Tier 1 Contribution" if is_nps else "Investment SIP"
+        )
+        
     return (
         clean_raw if clean_raw else "Uncategorized Merchant",
         txn_type,
@@ -114,9 +133,9 @@ def parse_sms_record(row, rules):
     if re.search(r"\b(get simply save|instant discount|flat \d+% off|pre-approved|apply for|apply now|win up to|congrats.*life cover|launches premium|save rs\.|hurry! last few days|enjoy zero processing fee|manage spends effectively by increasing|spacious 2 & 3bhk|special deal on flights)\b", content, re.IGNORECASE):
         return None, "PROMO"
         
-    # Filter pure informational / non-payment statements
-    if re.search(r"\b(statement for credit card|bill for your airtel|total due:|min due:|re-kyc due|is maturing on|e-voting for|passbook balance against|reported your fund bal|traded value for|investment value in tier)\b", content, re.IGNORECASE):
-        if not re.search(r"\b(payment received|payment of rs.*received|debited|spent|sent rs|credited to)\b", content, re.IGNORECASE):
+    # Filter pure informational / non-payment statements & due alerts
+    if re.search(r"\b(is due on|is due by|due date:|payment.*is due|total due:|min due:|total amt due|min amt due|e-statement|statement for.*card|statement.*generated|due amount has been updated|re-kyc due|is maturing on|e-voting for|passbook balance against|reported your fund bal|traded value for|investment value in tier|ignore if (?:already )?paid|emi request received)\b", content, re.IGNORECASE):
+        if not re.search(r"(?:payment of (?:inr|rs\.?)\s*[\d,.]+\s*(?:is|was)?\s*credited|payment of (?:inr|rs\.?)\s*[\d,.]+\s*(?:has been|was)?\s*received (?:towards|on)|online payment of (?:inr|rs\.?)\s*[\d,.]+\s*.*credited|payment.*for your.*credit card has been (?:successfully )?processed|credited to Kotak Bank|debited for|spent at|spent using|spent rs|sent rs)", content, re.IGNORECASE):
             return None, "STATEMENT_REPORT"
             
     # Extract Amount
@@ -149,14 +168,40 @@ def parse_sms_record(row, rules):
     elif "BOB" in contact.upper():
         ac_m = re.search(r"(?:A/c\s*|A/C\s*)([.\d]+|[X\d]+)", content, re.IGNORECASE)
         account = f"BOB AC {ac_m.group(1)}" if ac_m else "BOB AC 2235"
+    elif "SBICRD" in contact.upper() or "SBI CARD" in content.upper() or "SBI CREDIT CARD" in content.upper():
+        card_m = re.search(r"(?:Credit Card\s*|Card\s*)(?:ending\s*)?([xX\d]+)", content, re.IGNORECASE)
+        account = f"SBI Card {card_m.group(1)}" if card_m else "SBI Credit Card"
+    elif "SBIBNK" in contact.upper() or "SBI" in contact.upper():
+        account = "SBI Bank"
+    elif "RBL" in contact.upper() or "RBL" in content.upper():
+        card_m = re.search(r"(?:Credit Card\s*|Card\s*)(?:ending(?:\s*with)?\s*)?([xX\d]+)", content, re.IGNORECASE)
+        account = f"RBL Card {card_m.group(1)}" if card_m else "RBL Card"
+    elif "INDUS" in contact.upper() or "INDUSIND" in content.upper():
+        card_m = re.search(r"(?:Credit Card\s*|Card\s*)(?:ending(?:\s*with)?\s*)?([xX\d]+)", content, re.IGNORECASE)
+        account = f"IndusInd Card {card_m.group(1)}" if card_m else "IndusInd Card"
+    elif "IDFC" in contact.upper():
+        card_m = re.search(r"(?:Credit Card\s*|Card\s*)(?:ending(?:\s*with)?\s*)?([xX\d]+)", content, re.IGNORECASE)
+        account = f"IDFC Card {card_m.group(1)}" if card_m else "IDFC Card"
+    elif "ONECARD" in contact.upper() or "ONECARD" in content.upper():
+        account = "OneCard"
+    elif "AMEX" in contact.upper() or "AMERICAN EXPRESS" in content.upper():
+        card_m = re.search(r"(?:Credit Card\s*|Card\s*)(?:ending(?:\s*in)?\s*)?([xX\d]+)", content, re.IGNORECASE)
+        account = f"Amex Card {card_m.group(1)}" if card_m else "American Express Card"
     elif "QCAMZN" in contact.upper() or "AMAZON" in content.upper():
         account = "Amazon Pay Wallet"
     elif "ZEPTO" in contact.upper() or "ZEPTO CASH" in content.upper():
         account = "Zepto Cash"
     elif "CREDIN" in contact.upper():
         account = "CRED"
+    elif "PRAN" in content.upper() or "PTNNPS" in contact.upper() or "NPSCRA" in contact.upper() or "PROTEAN" in content.upper():
+        pran_m = re.search(r"PRAN\s*([xX\d]+)", content, re.IGNORECASE)
+        account = f"NPS PRAN {pran_m.group(1)}" if pran_m else "NPS PRAN XX1042"
     else:
-        account = contact
+        card_m = re.search(r"(?:Credit Card\s*|Card\s*)(?:ending(?:\s*with)?\s*)?([xX\d]+)", content, re.IGNORECASE)
+        if card_m:
+            account = f"Credit Card {card_m.group(1)}"
+        else:
+            account = contact
 
     # Merchant & Raw Type Parsing
     txn_type = "Expense"
@@ -175,12 +220,39 @@ def parse_sms_record(row, rules):
     
     # Specific Bank Credit / Inflow Patterns
     kotak_neft = re.search(r"credited to your Kotak Bank a/c [^\s]+ via NEFT from beneficiary (.+?)(?:\. UTR|$)", content, re.IGNORECASE)
-    kotak_rev = re.search(r"credited to Kotak Bank A/C.*reversal", content, re.IGNORECASE)
-    icici_ref = re.search(r"^(.*?)\s*refund of Rs\.?\s*[\d,.]+\s+credited to your ICICI", content, re.IGNORECASE)
+    kotak_rev = re.search(r"\b(reversal.*credited|credited.*reversal|credited/refunded)\b", content, re.IGNORECASE)
+    icici_ref = re.search(r"^(.*?)\s*refund of Rs\.?\s*[\d,.]+\s+credited to (?:your )?ICICI", content, re.IGNORECASE)
+    card_refund = re.search(r"\b(?:refund|refunded|reversal)\b.*(?:credited|adjusted)|(?:credited|adjusted).*\b(?:refund|refunded|reversal)\b", content, re.IGNORECASE)
     bob_cr = re.search(r"Credited to A/c .* from:ACHCR/(.+?)(?:\s*\.|\s+Total|$)", content, re.IGNORECASE)
     axis_cashback = re.search(r"Cashback of INR\s*[\d,.]+\s+has been credited", content, re.IGNORECASE)
     groww_settle = re.search(r"Transfer successful from Groww", content, re.IGNORECASE)
-    cc_pmt_rcvd = re.search(r"(?:PAYMENT OF Rs\.\s*[\d,.]+\s*RECEIVED TOWARDS YOUR CREDIT CARD|Payment of INR\s*[\d,.]+\s*received towards your ICICI|credited to AU Bank Credit Card)", content, re.IGNORECASE)
+    nps_contrib = re.search(r"(?:PRAN\s*[xX\d]+.*contribution of|contribution of.*(?:credited with nav|to (?:pran|nps))|units for.*contribution of)", content, re.IGNORECASE)
+    is_card_context = bool(
+        re.search(r"\b(credit card|cardmember|cardholder|onecard|bobcard|amex)\b|card\s*(?:ending|no|xx|x|\d)", content, re.IGNORECASE)
+        or any(k in contact.upper() for k in ["SBICRD", "ICICIT", "AUBANK", "AXISBK", "HDFCBK", "KOTAKB", "BOBCRD", "RBLCRD", "ONECRD", "IDFC"])
+    )
+    is_not_reversal_or_due = not bool(
+        re.search(r"\b(refund|refunded|cashback|reversal|is due on|is due by|due date:|payment.*is due|total due:|min due:|total amt due|min amt due|e-statement|statement for|statement.*generated|ignore if (?:already )?paid)\b", content, re.IGNORECASE)
+    )
+    cc_pmt_rcvd = False
+    if is_card_context and is_not_reversal_or_due:
+        if re.search(
+            r"(?:"
+            r"payment of (?:inr|rs\.?)\s*[\d,.]+\s*(?:has been|was|is)?\s*(?:received|credited|processed)"
+            r"|payment of (?:inr|rs\.?)\s*[\d,.]+\s*.*(?:received towards|received on|received for|credited to|credited towards)"
+            r"|payment of (?:inr|rs\.?)\s*[\d,.]+\s*.*(?:towards|on|for).*card.*(?:received|credited|processed|successful)"
+            r"|online payment of (?:inr|rs\.?)\s*[\d,.]+\s*.*(?:credited|received)"
+            r"|payment (?:of\s*)?(?:inr|rs\.?)?\s*[\d,.]*\s*(?:received|credited)\s*towards (?:your )?.*card"
+            r"|payment.*(?:received|credited).*through (?:bharat bill payment system|bbps)"
+            r"|payment.*for your [a-z0-9\s]+ credit card has been (?:successfully )?processed"
+            r"|thank you.*payment of (?:inr|rs\.?)\s*[\d,.]+\s*(?:was|is)?\s*credited"
+            r"|we have received payment of (?:inr|rs\.?)\s*[\d,.]+"
+            r"|thank you for (?:your )?payment of (?:inr|rs\.?)\s*[\d,.]+"
+            r")",
+            content,
+            re.IGNORECASE
+        ):
+            cc_pmt_rcvd = True
     
     ref_match = re.search(r"(?:UPI Ref|Ref no|UTR|Ref:)\s*([A-Za-z0-9-]+)", content, re.IGNORECASE)
     if ref_match:
@@ -222,8 +294,15 @@ def parse_sms_record(row, rules):
     elif groww_settle:
         merchant = "Groww Settlement"
         txn_type = "Investment Inflow"
-    elif kotak_rev or icici_ref:
-        merchant = (icici_ref.group(1).strip() if icici_ref else "UPI Reversal")
+    elif nps_contrib:
+        merchant = "National Pension System"
+        txn_type = "Investment"
+    elif kotak_rev or icici_ref or card_refund:
+        if icici_ref:
+            merchant = icici_ref.group(1).strip()
+        else:
+            au_m = re.search(r"from\s+(.+?)\s+on\s+\d", content, re.IGNORECASE)
+            merchant = au_m.group(1).strip() if au_m else "Refund / Reversal"
         txn_type = "Refund / Reversal"
     elif cc_pmt_rcvd:
         merchant = "Credit Card Bill Payment"
@@ -263,7 +342,16 @@ def parse_sms_record(row, rules):
         parsed_date = dt_obj.strftime("%Y-%m-%d")
         month_year = dt_obj.strftime("%Y-%m (%b)")
     except Exception:
-        month_year = "Unknown"
+        date_m = re.search(r"\b(\d{1,2}[-/](?:[A-Za-z]{3}|\d{1,2})[-/]\d{2,4})\b", content)
+        if date_m:
+            try:
+                dt_obj = pd.to_datetime(date_m.group(1), dayfirst=True)
+                parsed_date = dt_obj.strftime("%Y-%m-%d")
+                month_year = dt_obj.strftime("%Y-%m (%b)")
+            except Exception:
+                month_year = "Unknown"
+        else:
+            month_year = "Unknown"
 
     return {
         "Date": parsed_date,

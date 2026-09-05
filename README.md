@@ -19,6 +19,7 @@ An intelligent, lightweight application to analyze and categorize personal expen
   - **View 1 (Insights & Analytics)**: High-level KPIs, Month-on-Month cash flow comparison, 3-level interactive Sunburst chart, Top 10 merchants, and account-wise spend distribution.
   - **View 2 (Merchant & Hierarchy Admin Panel)**: Inspect any merchant's transaction history and customize their 3-tier categorization rules with real-time saving and hot reloading.
   - **View 3 (Raw Transactions Ledger)**: Searchable, filterable ledger with raw SMS inspector and CSV export.
+  - **View 4 (Merchant & Category Filter)**: Multi-dimensional drilldown by any combination of Merchant, Bucket (L1), and Sub-Bucket (L2), complete with dedicated KPIs, monthly charts, breakdown visualizations, and filtered CSV export.
 
 ## Setup & Running
 

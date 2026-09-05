@@ -41,8 +41,9 @@ st.markdown("""
 
 # ----------------- Helper functions -----------------
 @st.cache_data(show_spinner=False)
-def get_parsed_data(csv_file_path, _rules):
-    return sms_parser.parse_sms_file(csv_file_path, rules=_rules)
+def get_parsed_data(csv_file_path, rules_json_str, file_mtime=0):
+    rules_obj = json.loads(rules_json_str) if rules_json_str else None
+    return sms_parser.parse_sms_file(csv_file_path, rules=rules_obj)
 
 def format_inr(val):
     if abs(val) >= 10000000:
@@ -58,6 +59,10 @@ def format_inr(val):
 st.sidebar.title("💰 Expense Helper")
 st.sidebar.markdown("Smart SMS-driven expense tracking & categorization.")
 
+if st.sidebar.button("🔄 Reload & Re-parse Data"):
+    st.cache_data.clear()
+    st.rerun()
+
 # CSV Source
 default_file = "file.csv" if os.path.exists("file.csv") else None
 uploaded_file = st.sidebar.file_uploader("Upload SMS Backup CSV", type=["csv"])
@@ -72,7 +77,9 @@ else:
 
 # Load rules
 rules = sms_parser.load_rules()
-df = get_parsed_data(csv_source, rules)
+rules_str = json.dumps(rules, sort_keys=True)
+mtime = os.path.getmtime(csv_source) if isinstance(csv_source, str) and os.path.exists(csv_source) else 0
+df = get_parsed_data(csv_source, rules_str, file_mtime=mtime)
 
 if df.empty:
     st.warning("No transactions could be parsed from the provided file.")
@@ -118,8 +125,10 @@ transfers = fdf[fdf["Type"].isin(["Transfer"])]["Amount"].sum()
 net_cash = inflow - (expenses + investments + transfers)
 
 kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
-kpi1.metric("💵 Total Inflow", format_inr(inflow), f"{len(fdf[fdf['Type']=='Income'])} records")
-kpi2.metric("💳 Direct Expenses", format_inr(expenses), f"{len(fdf[fdf['Type']=='Expense'])} records", delta_color="inverse")
+inflow_types = ["Income", "Salary / Income", "Dividend / Inflow", "Cashback / Reward", "Investment Inflow"]
+expense_types = ["Expense", "Debt / EMI", "Cash Withdrawal"]
+kpi1.metric("💵 Total Inflow", format_inr(inflow), f"{len(fdf[fdf['Type'].isin(inflow_types)])} records")
+kpi2.metric("💳 Direct Expenses", format_inr(expenses), f"{len(fdf[fdf['Type'].isin(expense_types)])} records", delta_color="inverse")
 kpi3.metric("📈 Investments", format_inr(investments), f"{len(fdf[fdf['Type']=='Investment'])} records")
 kpi4.metric("👥 Transfers / P2P", format_inr(transfers), f"{len(fdf[fdf['Type']=='Transfer'])} records")
 kpi5.metric("🏦 Net Cash Flow", format_inr(net_cash), "Inflow - Outflow")
@@ -127,10 +136,11 @@ kpi5.metric("🏦 Net Cash Flow", format_inr(net_cash), "Inflow - Outflow")
 st.divider()
 
 # ----------------- Tabs / Views -----------------
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Insights & Analytics",
     "⚙️ Merchant & Hierarchy Admin",
-    "📋 Raw Transactions Ledger"
+    "📋 Raw Transactions Ledger",
+    "🎯 Merchant & Category Filter"
 ])
 
 # ==========================================
@@ -372,3 +382,142 @@ with tab3:
             use_container_width=True,
             hide_index=True
         )
+
+
+# ==========================================
+# VIEW 4: FILTER BY MERCHANT & HIERARCHY (L1/L2)
+# ==========================================
+with tab4:
+    st.subheader("🎯 Filter by Merchant & Category Hierarchy (L1 / L2)")
+    st.markdown("Filter and inspect all related transactions across any combination of **Bucket (L1)**, **Sub-Bucket (L2)**, and **Merchant**.")
+
+    col_toggle, _ = st.columns([2, 2])
+    with col_toggle:
+        apply_sidebar = st.checkbox("Respect sidebar date & account filters", value=True, key="v4_sidebar_toggle")
+
+    base_v4_df = fdf.copy() if apply_sidebar else df.copy()
+
+    col_f1, col_f2, col_f3 = st.columns(3)
+
+    # 1. Bucket (L1) filter
+    all_l1 = sorted(base_v4_df["Bucket"].dropna().unique().tolist())
+    with col_f1:
+        sel_l1 = st.multiselect("🏷️ Filter Bucket (L1)", options=all_l1, placeholder="All Buckets (L1)", key="v4_sel_l1")
+
+    # Filter base for L2 options if L1 is selected
+    l2_pool = base_v4_df[base_v4_df["Bucket"].isin(sel_l1)] if sel_l1 else base_v4_df
+    all_l2 = sorted(l2_pool["Sub_Bucket"].dropna().unique().tolist())
+    with col_f2:
+        sel_l2 = st.multiselect("📂 Filter Sub-Bucket (L2)", options=all_l2, placeholder="All Sub-Buckets (L2)", key="v4_sel_l2")
+
+    # Filter base for Merchant options if L1 or L2 is selected
+    m_pool = l2_pool[l2_pool["Sub_Bucket"].isin(sel_l2)] if sel_l2 else l2_pool
+    merchant_counts = m_pool["Merchant"].value_counts()
+    all_merchants = merchant_counts.index.tolist()
+    with col_f3:
+        sel_merchants = st.multiselect("🏪 Filter Merchant", options=all_merchants, placeholder="All Merchants", key="v4_sel_merchants")
+
+    # Apply all three filters
+    filtered_v4 = base_v4_df.copy()
+    if sel_l1:
+        filtered_v4 = filtered_v4[filtered_v4["Bucket"].isin(sel_l1)]
+    if sel_l2:
+        filtered_v4 = filtered_v4[filtered_v4["Sub_Bucket"].isin(sel_l2)]
+    if sel_merchants:
+        filtered_v4 = filtered_v4[filtered_v4["Merchant"].isin(sel_merchants)]
+
+    # Metrics Summary Bar
+    st.divider()
+    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+    v4_total_count = len(filtered_v4)
+    v4_total_amount = filtered_v4["Amount"].sum() if v4_total_count > 0 else 0
+    v4_avg_amount = (v4_total_amount / v4_total_count) if v4_total_count > 0 else 0
+    v4_unique_merchants = filtered_v4["Merchant"].nunique() if v4_total_count > 0 else 0
+
+    m_col1.metric("Total Transactions", f"{v4_total_count} records")
+    m_col2.metric("Total Volume", format_inr(v4_total_amount))
+    m_col3.metric("Average Transaction", format_inr(v4_avg_amount))
+    m_col4.metric("Unique Merchants", f"{v4_unique_merchants} merchants")
+
+    if filtered_v4.empty:
+        st.info("No transactions match the selected filter combination.")
+    else:
+        # Visual charts if results exist
+        if v4_total_count > 1:
+            c1, c2 = st.columns(2)
+            with c1:
+                monthly_v4 = filtered_v4.groupby(["Month", "Type"])["Amount"].sum().reset_index()
+                fig_m = px.bar(
+                    monthly_v4,
+                    x="Month",
+                    y="Amount",
+                    color="Type",
+                    barmode="stack",
+                    title="Monthly Spend / Flow for Selection",
+                    color_discrete_map={
+                        "Income": "#10B981",
+                        "Expense": "#EF4444",
+                        "Investment": "#3B82F6",
+                        "Transfer": "#8B5CF6",
+                        "Credit Card Bill Payment": "#F59E0B",
+                        "Cash Withdrawal": "#64748B",
+                        "Refund / Reversal": "#06B6D4"
+                    }
+                )
+                fig_m.update_layout(xaxis_title="", yaxis_title="Amount (₹)", margin=dict(t=35, b=10, l=10, r=10))
+                st.plotly_chart(fig_m, use_container_width=True)
+
+            with c2:
+                if v4_unique_merchants > 1:
+                    m_breakdown = filtered_v4.groupby("Merchant")["Amount"].sum().reset_index().sort_values("Amount", ascending=False).head(8)
+                    fig_b = px.bar(
+                        m_breakdown,
+                        x="Amount",
+                        y="Merchant",
+                        orientation="h",
+                        text="Amount",
+                        title="Top Merchants in Selection",
+                        color_discrete_sequence=["#6366F1"]
+                    )
+                    fig_b.update_traces(texttemplate="₹%{text:,.0f}", textposition="outside")
+                    fig_b.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Amount (₹)", yaxis_title="", margin=dict(t=35, b=10, l=10, r=10))
+                    st.plotly_chart(fig_b, use_container_width=True)
+                else:
+                    acc_breakdown = filtered_v4.groupby("Account")["Amount"].sum().reset_index().sort_values("Amount", ascending=False)
+                    fig_b = px.pie(
+                        acc_breakdown,
+                        values="Amount",
+                        names="Account",
+                        hole=0.4,
+                        title="Spend by Account / Card",
+                        color_discrete_sequence=px.colors.qualitative.Safe
+                    )
+                    fig_b.update_traces(textposition="inside", textinfo="percent+label")
+                    fig_b.update_layout(margin=dict(t=35, b=10, l=10, r=10))
+                    st.plotly_chart(fig_b, use_container_width=True)
+
+        # Download & Table
+        st.markdown(f"#### 📋 Matching Transactions ({v4_total_count})")
+        export_v4 = filtered_v4[["Date", "Month", "Amount", "Type", "Bucket", "Sub_Bucket", "Sub_Sub_Bucket", "Merchant", "Account", "Ref_No", "Sender", "Raw_SMS"]]
+        csv_v4 = export_v4.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="📥 Download Filtered Results (CSV)",
+            data=csv_v4,
+            file_name="filtered_transactions.csv",
+            mime="text/csv",
+            key="v4_download_csv"
+        )
+
+        st.dataframe(
+            filtered_v4[["Date", "Amount", "Type", "Merchant", "Bucket", "Sub_Bucket", "Sub_Sub_Bucket", "Account", "Ref_No", "Sender"]],
+            use_container_width=True,
+            hide_index=True
+        )
+
+        with st.expander("🔍 View Raw SMS Messages for Filtered Transactions"):
+            st.dataframe(
+                filtered_v4[["Date", "Merchant", "Amount", "Raw_SMS"]],
+                use_container_width=True,
+                hide_index=True
+            )
+
