@@ -64,7 +64,7 @@ if st.sidebar.button("🔄 Reload & Re-parse Data"):
     st.rerun()
 
 # CSV Source
-default_file = "file.csv" if os.path.exists("file.csv") else None
+default_file = "file.csv" if os.path.exists("file.csv") else ("expenses_clean_tagged.csv" if os.path.exists("expenses_clean_tagged.csv") else None)
 uploaded_file = st.sidebar.file_uploader("Upload SMS Backup CSV", type=["csv"])
 
 if uploaded_file is not None:
@@ -172,68 +172,133 @@ with tab1:
         st.plotly_chart(fig_month, use_container_width=True)
         
     with col_right:
-        st.subheader("🍩 Expense Distribution by Bucket")
-        exp_only = fdf[fdf["Type"] == "Expense"]
-        if not exp_only.empty:
-            bucket_agg = exp_only.groupby("Bucket")["Amount"].sum().reset_index()
+        st.subheader("🍩 Outflow Distribution by Bucket")
+        outflow_scope = st.radio(
+            "Outflow Scope:",
+            ["All Outflows (Expenses + Investments)", "Direct Expenses Only", "Investments Only"],
+            horizontal=True,
+            key="tab1_outflow_scope"
+        )
+        if outflow_scope == "Direct Expenses Only":
+            chart_df = fdf[fdf["Type"] == "Expense"]
+            chart_label = "Direct Expenses"
+        elif outflow_scope == "Investments Only":
+            chart_df = fdf[fdf["Type"] == "Investment"]
+            chart_label = "Investments"
+        else:
+            chart_df = fdf[fdf["Type"].isin(["Expense", "Investment"])]
+            chart_label = "All Outflows"
+
+        if not chart_df.empty:
+            bucket_agg = chart_df.groupby("Bucket")["Amount"].sum().reset_index()
             fig_pie = px.pie(
                 bucket_agg,
                 values="Amount",
                 names="Bucket",
                 hole=0.45,
-                title="Direct Expenses by Bucket (L1)"
+                title=f"{chart_label} by Bucket (L1)"
             )
             fig_pie.update_traces(textposition="inside", textinfo="percent+label")
             st.plotly_chart(fig_pie, use_container_width=True)
         else:
-            st.info("No expense transactions in current filter selection.")
+            st.info("No transactions found for the selected outflow scope.")
 
     st.divider()
     
     # 3-Level Sunburst Chart
-    st.subheader("🌳 3-Tier Multi-Level Spending Hierarchy (Bucket ➔ Sub-Bucket ➔ Sub-Sub-Bucket)")
+    st.subheader(f"🌳 3-Tier Multi-Level Hierarchy ({chart_label}: Bucket ➔ Sub-Bucket ➔ Sub-Sub-Bucket)")
     st.caption("Click on any inner ring slice to drill down into sub-buckets and individual merchant sub-sub-categories.")
     
-    if not exp_only.empty:
+    if not chart_df.empty:
         fig_sunburst = px.sunburst(
-            exp_only,
+            chart_df,
             path=["Bucket", "Sub_Bucket", "Sub_Sub_Bucket"],
             values="Amount",
             color="Bucket",
-            title="Expense Hierarchy Sunburst Chart"
+            title=f"{chart_label} Hierarchy Sunburst Chart"
         )
         fig_sunburst.update_layout(margin=dict(t=30, l=0, r=0, b=0), height=550)
         st.plotly_chart(fig_sunburst, use_container_width=True)
     
     col_m1, col_m2 = st.columns(2)
     with col_m1:
-        st.subheader("🏆 Top 10 Merchants by Outflow")
-        top_merchants = exp_only.groupby("Merchant")["Amount"].agg(["sum", "count"]).sort_values("sum", ascending=False).head(10).reset_index()
+        st.subheader(f"🏆 Top 10 Merchants / Platforms ({chart_label})")
+        top_merchants = chart_df.groupby("Merchant")["Amount"].agg(["sum", "count"]).sort_values("sum", ascending=False).head(10).reset_index()
         fig_merchants = px.bar(
             top_merchants,
             x="sum",
             y="Merchant",
             orientation="h",
             text="sum",
-            labels={"sum": "Total Spend (₹)", "Merchant": ""},
-            title="Top 10 Merchants"
+            labels={"sum": "Total Outflow (₹)", "Merchant": ""},
+            title=f"Top 10 Outflows ({chart_label})"
         )
         fig_merchants.update_traces(texttemplate="₹%{text:,.0f}", textposition="outside")
         fig_merchants.update_layout(yaxis=dict(autorange="reversed"))
         st.plotly_chart(fig_merchants, use_container_width=True)
         
     with col_m2:
-        st.subheader("💳 Spends by Account / Card")
-        acc_spends = exp_only.groupby("Account")["Amount"].sum().reset_index().sort_values("Amount", ascending=False)
+        st.subheader(f"💳 Spends / Debits by Account ({chart_label})")
+        acc_spends = chart_df.groupby("Account")["Amount"].sum().reset_index().sort_values("Amount", ascending=False)
         fig_acc = px.bar(
             acc_spends,
             x="Account",
             y="Amount",
             color="Account",
-            title="Spends by Payment Instrument"
+            title=f"Debits by Account ({chart_label})"
         )
-        fig_acc.update_layout(xaxis_title="", yaxis_title="Spend (₹)", showlegend=False)
+        fig_acc.update_layout(xaxis_title="", yaxis_title="Amount (₹)", showlegend=False)
         st.plotly_chart(fig_acc, use_container_width=True)
+
+    # Dedicated Investments & Wealth Deep-Dive Section
+    st.divider()
+    st.subheader("📈 Investments & Wealth Portfolio Breakdown")
+    inv_df = fdf[fdf["Type"] == "Investment"]
+    if not inv_df.empty:
+        col_inv1, col_inv2, col_inv3, col_inv4 = st.columns(4)
+        total_inv = inv_df["Amount"].sum()
+        mf_inv = inv_df[inv_df["Sub_Bucket"] == "Mutual Funds & SIP"]["Amount"].sum()
+        nps_inv = inv_df[inv_df["Sub_Bucket"].str.contains("NPS|Pension", case=False, na=False)]["Amount"].sum()
+        unique_platforms = inv_df["Merchant"].nunique()
+        
+        col_inv1.metric("Total Invested", format_inr(total_inv), f"{len(inv_df)} transactions")
+        col_inv2.metric("Mutual Funds & SIP", format_inr(mf_inv))
+        col_inv3.metric("Retirement / NPS", format_inr(nps_inv))
+        col_inv4.metric("Platforms / AMCs", f"{unique_platforms} active")
+        
+        col_c1, col_c2 = st.columns([3, 2])
+        with col_c1:
+            inv_by_merchant = inv_df.groupby(["Merchant", "Sub_Bucket"])["Amount"].sum().reset_index().sort_values("Amount", ascending=False)
+            fig_inv_m = px.bar(
+                inv_by_merchant,
+                x="Merchant",
+                y="Amount",
+                color="Sub_Bucket",
+                text="Amount",
+                title="Investments by Platform / AMC"
+            )
+            fig_inv_m.update_traces(texttemplate="₹%{text:,.0f}", textposition="outside")
+            st.plotly_chart(fig_inv_m, use_container_width=True)
+            
+        with col_c2:
+            inv_monthly = inv_df.groupby(["Month", "Merchant"])["Amount"].sum().reset_index()
+            fig_inv_trend = px.bar(
+                inv_monthly,
+                x="Month",
+                y="Amount",
+                color="Merchant",
+                title="Month-on-Month Investment Trend"
+            )
+            st.plotly_chart(fig_inv_trend, use_container_width=True)
+            
+        with st.expander("🔍 View All Investment Transactions"):
+            st.dataframe(
+                inv_df[["Date", "Amount", "Merchant", "Bucket", "Sub_Bucket", "Sub_Sub_Bucket", "Account", "Ref_No"]],
+                use_container_width=True,
+                hide_index=True
+            )
+    else:
+        st.info("No investment transactions found in current date/account selection.")
 
 
 # ==========================================

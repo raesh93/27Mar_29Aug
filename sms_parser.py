@@ -196,6 +196,9 @@ def parse_sms_record(row, rules):
     elif "PRAN" in content.upper() or "PTNNPS" in contact.upper() or "NPSCRA" in contact.upper() or "PROTEAN" in content.upper():
         pran_m = re.search(r"PRAN\s*([xX\d]+)", content, re.IGNORECASE)
         account = f"NPS PRAN {pran_m.group(1)}" if pran_m else "NPS PRAN XX1042"
+    elif "MOAMCL" in contact.upper() or "MOTILAL" in content.upper():
+        folio_m = re.search(r"Folio (?:No\s*)?([X\d]+)", content, re.IGNORECASE)
+        account = f"Motilal Folio {folio_m.group(1)}" if folio_m else "Motilal Oswal MF"
     else:
         card_m = re.search(r"(?:Credit Card\s*|Card\s*)(?:ending(?:\s*with)?\s*)?([xX\d]+)", content, re.IGNORECASE)
         if card_m:
@@ -227,6 +230,7 @@ def parse_sms_record(row, rules):
     axis_cashback = re.search(r"Cashback of INR\s*[\d,.]+\s+has been credited", content, re.IGNORECASE)
     groww_settle = re.search(r"Transfer successful from Groww", content, re.IGNORECASE)
     nps_contrib = re.search(r"(?:PRAN\s*[xX\d]+.*contribution of|contribution of.*(?:credited with nav|to (?:pran|nps))|units for.*contribution of)", content, re.IGNORECASE)
+    mf_allot = re.search(r"(?:purchase request.*(?:is processed|allotted)|units are allotted|allotted in demat mode|allotment.*for (?:inr|rs\.?)\s*[\d,.]+)", content, re.IGNORECASE)
     is_card_context = bool(
         re.search(r"\b(credit card|cardmember|cardholder|onecard|bobcard|amex)\b|card\s*(?:ending|no|xx|x|\d)", content, re.IGNORECASE)
         or any(k in contact.upper() for k in ["SBICRD", "ICICIT", "AUBANK", "AXISBK", "HDFCBK", "KOTAKB", "BOBCRD", "RBLCRD", "ONECRD", "IDFC"])
@@ -296,6 +300,9 @@ def parse_sms_record(row, rules):
         txn_type = "Investment Inflow"
     elif nps_contrib:
         merchant = "National Pension System"
+        txn_type = "Investment"
+    elif mf_allot:
+        merchant = "Motilal Oswal MF" if "MOAMCL" in contact.upper() or "MOTILAL" in content.upper() else "Mutual Fund Allotment"
         txn_type = "Investment"
     elif kotak_rev or icici_ref or card_refund:
         if icici_ref:

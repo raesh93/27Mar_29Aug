@@ -212,6 +212,17 @@
         "cred cash"
       ]
     },
+    "groww_settlement": {
+      "name": "Groww (Quarterly Settlement)",
+      "type": "Investment Inflow",
+      "bucket": "Income & Inflows",
+      "sub_bucket": "Investment Returns",
+      "sub_sub_bucket": "Groww Settlement",
+      "match_patterns": [
+        "transfer successful from groww",
+        "quarterly settlement: transfer successful"
+      ]
+    },
     "groww_sip": {
       "name": "Groww Mutual Funds",
       "type": "Investment",
@@ -220,6 +231,8 @@
       "sub_sub_bucket": "Groww Equity SIP",
       "match_patterns": [
         "groww.stocksip",
+        "groww stocksip",
+        "growwinvesttech",
         "groww"
       ]
     },
@@ -241,7 +254,9 @@
       "sub_sub_bucket": "Motilal Midcap SIP",
       "match_patterns": [
         "moamcl",
-        "momf midcap"
+        "momf midcap",
+        "motilal oswal",
+        "motilal"
       ]
     },
     "nps_protean": {
